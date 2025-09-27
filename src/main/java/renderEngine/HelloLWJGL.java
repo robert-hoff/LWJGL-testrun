@@ -1,8 +1,11 @@
 package renderEngine;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -11,12 +14,16 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.stb.STBEasyFont;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+
 
 public class HelloLWJGL {
 
   private long window;
+  private int winWidth = 800;
+  private int winHeight = 600;
 
   public void run() {
     System.out.printf("Starting LWJGL %s! \n", Version.getVersion());
@@ -42,7 +49,7 @@ public class HelloLWJGL {
     GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
 
     // Create the window
-    window = GLFW.glfwCreateWindow(800, 600, "Hello LWJGL", MemoryUtil.NULL, MemoryUtil.NULL);
+    window = GLFW.glfwCreateWindow(winWidth, winHeight, "Hello LWJGL", MemoryUtil.NULL, MemoryUtil.NULL);
     if (window == MemoryUtil.NULL) {
       throw new RuntimeException("Failed to create the GLFW window");
     }
@@ -92,6 +99,8 @@ public class HelloLWJGL {
     // update glViewport when window is resized
     GLFW.glfwSetFramebufferSizeCallback(window, (win, width, height) -> {
       GL11.glViewport(0, 0, width, height);
+      this.winWidth = width;
+      this.winHeight = height;
     });
 
     // do a render pass also when the screen resizes
@@ -126,7 +135,58 @@ public class HelloLWJGL {
     GL11.glColor3f(0.0f, 0.0f, 1.0f); // Blue
     GL11.glVertex2f(0.0f, 0.5f);
     GL11.glEnd();
+
+    drawTextMessage("(1,100)", winWidth, winHeight);
     GLFW.glfwSwapBuffers(window);
+  }
+
+  void drawTextMessage(String text, int winW, int winH) {
+    // 1) Switch to 2D (orthographic) and prep state
+    GL11.glMatrixMode(GL11.GL_PROJECTION);
+    GL11.glPushMatrix();
+    GL11.glLoadIdentity();
+    // GL11.glOrtho(0, winW, winH, 0, -1, 1);  // <— notice winH, 0
+    GL11.glOrtho(0, winW, 0, winH, -1, 1);
+
+    GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    GL11.glPushMatrix();
+    GL11.glLoadIdentity();
+    // float textScale = 2.0f;
+    // GL11.glScalef(textScale, textScale, 1f);
+    GL11.glTranslatef(0f, winH, 0f);
+    GL11.glScalef(1f, -1f, 1f);
+
+    float textScale = 1.2f;
+    GL11.glScalef(textScale, textScale, 1f);
+
+
+    GL11.glDisable(GL11.GL_DEPTH_TEST);
+    GL11.glDisable(GL11.GL_TEXTURE_2D);
+    GL11.glDisable(GL11.GL_CULL_FACE);
+
+    // 2) Generate quads for the text
+    // Each character needs up to ~270 bytes; allocate once and reuse if you like.
+    ByteBuffer buffer = BufferUtils.createByteBuffer(16 * 270);
+    float x = 8f;
+    // float y = winH - 18f; // 8px margin from bottom edge (origin is bottom-left in this ortho)
+    float y = 8f; // 8px margin from bottom edge (origin is bottom-left in this ortho)
+    int numQuads = STBEasyFont.stb_easy_font_print(x, y, text, null, buffer);
+
+    // 3) Draw as GL_QUADS (compat profile)
+    // Vertex format is 2D floats packed by stb_easy_font. Each quad = 4 vertices.
+    // GL11.glColor3f(1f, 1f, 1f); // white text
+    GL11.glColor3f(0,0,0); // black text
+    GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+    GL11.glVertexPointer(2, GL11.GL_FLOAT, 16, buffer); // stride 16 bytes (x,y,z? easy font packs per-vertex stride=16)
+    GL11.glDrawArrays(GL11.GL_QUADS, 0, numQuads * 4);
+    GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
+
+    // 4) Restore state
+    GL11.glEnable(GL11.GL_DEPTH_TEST);
+    GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    GL11.glPopMatrix();
+    GL11.glMatrixMode(GL11.GL_PROJECTION);
+    GL11.glPopMatrix();
   }
 
   private void cleanup() {
