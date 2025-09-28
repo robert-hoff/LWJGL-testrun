@@ -5,6 +5,9 @@ import java.nio.IntBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
@@ -196,10 +199,19 @@ public class HelloLWJGL {
     GLFW.glfwSetErrorCallback(null).free();
   }
 
+  private static void showSwingPanel() {
+    SwingUtilities.invokeLater(() -> {
+      JFrame frame = new JFrame("Swing Control Panel");
+      frame.setSize(300, 200);
+      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      frame.setVisible(true);
+    });
+  }
+
   public static void main(String[] args) {
+    // creates a Swing panel that exists alongside the GLWF window
+    showSwingPanel();
     new HelloLWJGL().run();
   }
 }
-
-
 
