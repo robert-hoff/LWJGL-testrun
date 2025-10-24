@@ -7,16 +7,17 @@ public class GameState implements AppState {
   private final Camera camera;
   private final Scene scene;
   private boolean orbiting;
-
-  public GameState(Camera cam, Scene scn) {
-    this.camera = cam;
-    this.scene = scn;
+  private boolean shutdown = false;
+  
+  public GameState(Camera camera, Scene scene) {
+    this.camera = camera;
+    this.scene = scene;
   }
 
   @Override
   public void onAction(Action a) {
     
-    System.out.println(a);
+    // System.out.println(a);
     
     switch (a.type()) {
       case CLICK -> selectAt(a.x(), a.y());
@@ -28,6 +29,8 @@ public class GameState implements AppState {
       case ORBIT_END -> orbiting = false;
       case DRAG_UPDATE -> maybeDragSelection(a.dx(), a.dy());
       case ZOOM -> camera.dolly(a.dy());
+
+      case SHUTDOWN -> this.shutdown = true;
       default -> {}
     }
   }
@@ -35,6 +38,11 @@ public class GameState implements AppState {
   private void selectAt(double x, double y) { /* ray pick, set selection */ }
   private void focusAt(double x, double y) { /* fit camera to hit */ }
   private void maybeDragSelection(double dx, double dy) { /* translate gizmo */ }
+
+  @Override
+  public boolean shutDown() {
+    return shutdown;
+  }
 }
 
 

@@ -87,7 +87,6 @@ public class HelloLWJGL {
     // initialize OpenGL bindings
 
 
-
     // GLFW callbacks just enqueue
     GLFW.glfwSetCursorPosCallback(window, (w, x, y) ->
     input.enqueue(new CursorEvent(w, GLFW.glfwGetTime(), x, y)));
@@ -140,20 +139,38 @@ public class HelloLWJGL {
   
   
   private static final boolean SHOW_TIMESTAMP_EACH_DRAW = false;
+  final int TARGET_FPS = 10;
+  final double FRAME_TIME = 1.0 / TARGET_FPS;
 
   private void loop() {
     while (!GLFW.glfwWindowShouldClose(window)) {
+      if (state.shutDown()) {
+        GLFW.glfwSetWindowShouldClose(window, true);
+      }
+      
       // process window events, must be called every frame
       GLFW.glfwPollEvents();
-      input.update(deltaTime(), state::onAction);
-      
+      double dt = deltaTime();
+      // System.out.printf("dt=%5.3f \n", dt);
+      input.update(dt, state::onAction);
       drawScene();
-      // input.update(deltaTime(), state::onAction);
+      GLFW.glfwSwapBuffers(window);
       
+      // limit the frame rate
+      double elapsed = GLFW.glfwGetTime() - lastTime;
+      double sleepTime = FRAME_TIME - elapsed;
+      if (sleepTime > 0) {
+        try {
+          Thread.sleep((long) (sleepTime * 1000));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+
     }
   }
   
-  private double lastTime;
+  private double lastTime = 0;
   
   double deltaTime()
   {
@@ -182,7 +199,6 @@ public class HelloLWJGL {
     GL11.glEnd();
 
     drawTextMessage("(1,100)", winWidth, winHeight);
-    GLFW.glfwSwapBuffers(window);
   }
 
   void drawTextMessage(String text, int winW, int winH) {
@@ -235,10 +251,7 @@ public class HelloLWJGL {
   }
 
   private void cleanup() {
-
     int[] dim = getWindowDimensions();
-    System.out.printf("(%d,%d) \n", dim[0], dim[1]);
-
     Callbacks.glfwFreeCallbacks(window);
     GLFW.glfwDestroyWindow(window);
     GLFW.glfwTerminate();

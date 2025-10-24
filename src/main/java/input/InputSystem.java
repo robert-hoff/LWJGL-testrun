@@ -1,8 +1,11 @@
 package input;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import input.unused.InputContext;
 
 /**
  * The {@code InputSystem} class manages user input events and converts them into high-level
@@ -19,10 +22,10 @@ public class InputSystem {
   private final ArrayDeque<InputEvent> queue = new ArrayDeque<>();
   
   /** Handles gesture recognition logic for time-based or multi-step input patterns. */
-  private final GestureRecognizer gestures = new GestureRecognizer();
+  private final EventHandler eventHandler = new EventHandler();
   
   /** The active input context, defining key or control mappings for the current mode. */
-  private InputContext context = InputContext.EDITOR_DEFAULT();
+  // private InputContext context = InputContext.EDITOR_DEFAULT();
   
   /**
    * Adds a raw input event to the queue for later processing. Triggered by the the GLFW callbacks.
@@ -32,6 +35,8 @@ public class InputSystem {
   public void enqueue(InputEvent e) {
     queue.add(e);
   }
+  
+  
   
   /**
    * Updates the input system. This should be called once per frame from the main loop.
@@ -50,20 +55,15 @@ public class InputSystem {
    *
    */
   public void update(double dt, Consumer<Action> dispatch) {
+    // System.out.println(queue.size());
     while (!queue.isEmpty()) {
       var e = queue.pollFirst();
-
-      //            if (e instanceof KeyEvent) {
-      //              System.out.println(e);
-      //            }
-
       for (Action a : toActions(e)) {
         dispatch.accept(a);
       }
     }
-    
     // Update gesture recognizers for time-dependent behavior
-    for (Action a : gestures.updateTime(dt)) {
+    for (Action a : eventHandler.updateTime(dt)) {
       dispatch.accept(a);
     }
   }
@@ -82,8 +82,8 @@ public class InputSystem {
    * @return a list of resulting {@link Action}s
    */
   private List<Action> toActions(InputEvent e) {
-    var intents = context.map(e);
-    return gestures.process(e, intents);
+    // remove InputContext for now, and pass all events to InputHandler instead
+    return eventHandler.process(e);
   }
   
   /**
@@ -91,8 +91,8 @@ public class InputSystem {
    *
    * @param ctx the new {@link InputContext} to use
    */
-  void setContext(InputContext ctx) {
-    this.context = ctx;
-  }
+  //  void setContext(InputContext ctx) {
+  //    this.context = ctx;
+  //  }
 }
 

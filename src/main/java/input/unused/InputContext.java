@@ -1,4 +1,4 @@
-package input;
+package input.unused;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
@@ -24,29 +24,40 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import input.CursorEvent;
+import input.InputEvent;
+import input.KeyEvent;
+import input.MouseButtonEvent;
+import input.ScrollEvent;
+
 /**
  * InputContext maps raw {@link InputEvent}s to a list of semantic {@link Intent}s,
  * based on the active "mode". Think: Editor mode, Gameplay mode, Text-entry mode, etc.
  *
- * Usage:
- *   var ctx = InputContext.builder()
- *       .onMouse(GLFW_MOUSE_BUTTON_LEFT).press().emit("Select")
- *       .onMouse(GLFW_MOUSE_BUTTON_MIDDLE).drag().emit("Pan")
- *       .onMouse(GLFW_MOUSE_BUTTON_RIGHT).drag().emit("Rotate")
- *       .onScroll().emitZoom()     // turns scroll into COMMAND("ZoomIn/Out")
- *       .onKey(GLFW_KEY_W).press().emit("MoveForward")
- *       .onChord(GLFW_KEY_LEFT_CONTROL, GLFW_KEY_Z).emitCommand("Undo")
- *       .build();
- *
- *   // Provide a handy default:
- *   InputContext EDITOR_DEFAULT = InputContext.EDITOR_DEFAULT();
  */
 public interface InputContext {
-
-  /** Map one raw event into zero or more {@link Intent}s. */
+  
+  /**
+   * Map one raw event into zero or more {@link Intent}s.
+   *
+   */
   List<Intent> map(InputEvent e);
-
-  /** Replace with whatever "default editor" you want. */
+  
+  /**
+   * Replace with whatever "default editor" you want.
+   *
+   * @return The Inputcontext itself! An instantiation of the interface. It is called once
+   * by the InputSystem
+   *
+   *      InputContext context = InputContext.EDITOR_DEFAULT();
+   *
+   * And context.map(e) is used on each refresh to produce Intents
+   *
+   * The Builder classes below construct the returned InputContext object
+   *
+   *
+   */
+  // This is just a static method, it returns an InputContext object
   static InputContext EDITOR_DEFAULT() {
     return builder()
         // ---- Pointer basics ----
@@ -72,28 +83,39 @@ public interface InputContext {
         .onKey(GLFW_KEY_D).press().emit("MoveRight")
         .build();
   }
-
+  
   /** Builder entry point. */
   static Builder builder() { return new Builder(); }
-
+  
   // ------------------------- Implementation -------------------------
-
+  
   final class Builder {
     private final List<Rule> rules = new ArrayList<>();
 
-    public MouseRuleBuilder onMouse(int button) { return new MouseRuleBuilder(rules, button); }
-    public ScrollRuleBuilder onScroll() { return new ScrollRuleBuilder(rules); }
-    public CursorRuleBuilder onCursorMove() { return new CursorRuleBuilder(rules); }
-    public KeyRuleBuilder onKey(int key) { return new KeyRuleBuilder(rules, key); }
-    public ChordRuleBuilder onChord(int modifierKey, int key) { return new ChordRuleBuilder(rules, modifierKey, key); }
-
+    public MouseRuleBuilder onMouse(int button) {
+      return new MouseRuleBuilder(rules, button);
+    }
+    public ScrollRuleBuilder onScroll() {
+      return new ScrollRuleBuilder(rules);
+    }
+    public CursorRuleBuilder onCursorMove() {
+      return new CursorRuleBuilder(rules);
+    }
+    public KeyRuleBuilder onKey(int key) {
+      return new KeyRuleBuilder(rules, key);
+    }
+    public ChordRuleBuilder onChord(int modifierKey, int key) {
+      return new ChordRuleBuilder(rules, modifierKey, key);
+    }
+    
     public InputContext build() { return new DefaultContext(List.copyOf(rules)); }
   }
+  
 
   final class DefaultContext implements InputContext {
     private final List<Rule> rules;
     DefaultContext(List<Rule> rules) { this.rules = rules; }
-
+    
     @Override public List<Intent> map(InputEvent e) {
       var out = new ArrayList<Intent>(2);
       for (Rule r : rules) {
@@ -102,16 +124,16 @@ public interface InputContext {
       return out;
     }
   }
-
+  
   // ------------------------- Rules & Builders -------------------------
-
+  
   abstract class Rule {
     final Predicate<InputEvent> when;
     Rule(Predicate<InputEvent> when) { this.when = when; }
     abstract void tryEmit(InputEvent e, List<Intent> out);
   }
-
   
+
   final class MouseRule extends Rule {
     final int button;
     final Phase phase;
@@ -132,7 +154,7 @@ public interface InputContext {
       if (!when.test(e)) {
         return;
       }
-
+      
       if (phase == Phase.PRESS && mbe.action() == GLFW_PRESS) {
         out.add(Intent.pointerPress(button, Double.NaN, Double.NaN, mbe.mods(), label));
       } else if (phase == Phase.RELEASE && mbe.action() == GLFW_RELEASE) {
@@ -143,7 +165,7 @@ public interface InputContext {
       }
     }
   }
-
+  
   final class CursorRule extends Rule {
     CursorRule(Predicate<InputEvent> when) { super(when); }
     @Override void tryEmit(InputEvent e, List<Intent> out) {
@@ -152,7 +174,7 @@ public interface InputContext {
       }
     }
   }
-
+  
   final class ScrollRule extends Rule {
     ScrollRule(Predicate<InputEvent> when) { super(when); }
     @Override void tryEmit(InputEvent e, List<Intent> out) {
@@ -161,7 +183,7 @@ public interface InputContext {
       }
     }
   }
-
+  
   final class KeyRule extends Rule {
     final int key;
     final Phase phase;
@@ -182,7 +204,7 @@ public interface InputContext {
       if (!when.test(e)) {
         return;
       }
-
+      
       if (phase == Phase.PRESS && ke.action() == GLFW_PRESS) {
         out.add(Intent.keyPress(ke.key(), ke.mods(), label));
       } else if (phase == Phase.RELEASE && ke.action() == GLFW_RELEASE) {
@@ -190,7 +212,7 @@ public interface InputContext {
       }
     }
   }
-
+  
   final class ChordRule extends Rule {
     final int modKey;
     final int key;
@@ -211,7 +233,7 @@ public interface InputContext {
       if (!when.test(e)) {
         return;
       }
-
+      
       boolean ctrlHeld = (ke.mods() & (GLFW_MOD_CONTROL)) != 0;
       boolean leftCtrl = ke.scancode() == glfwGetKeyScancode(modKey);
       if ((ctrlHeld || leftCtrl) && ke.action() == GLFW_PRESS) {
@@ -219,31 +241,33 @@ public interface InputContext {
       }
     }
   }
-
+  
   enum Phase { PRESS, RELEASE, DRAG }
+  
 
-  
-  
+
   // ------------------------- Tiny DSL builders -------------------------
-
+  
   abstract class RuleBuilder<B extends RuleBuilder<B>> {
     final List<Rule> out;
     Predicate<InputEvent> pred = e -> true;
     RuleBuilder(List<Rule> out) { this.out = out; }
     @SuppressWarnings("unchecked") B when(Predicate<InputEvent> p) { pred = pred.and(p); return (B) this; }
   }
-
-  public static final class MouseRuleBuilder extends RuleBuilder<MouseRuleBuilder> {
+  
+  static final class MouseRuleBuilder extends RuleBuilder<MouseRuleBuilder> {
     private final int button;
     private Phase phase = Phase.PRESS;
     private String label = "Pointer";
     MouseRuleBuilder(List<Rule> out, int button) { super(out); this.button = button; }
-    public MouseRuleBuilder press() { this.phase = Phase.PRESS; return this; }
+    public MouseRuleBuilder press() {
+      this.phase = Phase.PRESS;
+      return this;
+    }
     public MouseRuleBuilder release() { this.phase = Phase.RELEASE; return this; }
     public MouseRuleBuilder drag() { this.phase = Phase.DRAG; return this; }
     public MouseRuleBuilder label(String label) { this.label = Objects.requireNonNull(label); return this; }
-    
-    
+
     public Builder emit(String label) {
       out.add(new MouseRule(pred, button, phase, label));
       {
@@ -253,9 +277,9 @@ public interface InputContext {
       }
     }
   }
-
   
-  public static final class CursorRuleBuilder extends RuleBuilder<CursorRuleBuilder> {
+
+  static final class CursorRuleBuilder extends RuleBuilder<CursorRuleBuilder> {
     CursorRuleBuilder(List<Rule> out) { super(out); }
     public Builder emitMove() { out.add(new CursorRule(pred));
     {
@@ -265,8 +289,8 @@ public interface InputContext {
     }
     }
   }
-
-  public static final class ScrollRuleBuilder extends RuleBuilder<ScrollRuleBuilder> {
+  
+  static final class ScrollRuleBuilder extends RuleBuilder<ScrollRuleBuilder> {
     ScrollRuleBuilder(List<Rule> out) { super(out); }
     public Builder emitZoom() {
       // Interpret dy>0 as zoom-in, dy<0 as zoom-out in GestureRecognizer; here we just emit raw scroll
@@ -278,8 +302,8 @@ public interface InputContext {
       }
     }
   }
-
-  public static final class KeyRuleBuilder extends RuleBuilder<KeyRuleBuilder> {
+  
+  static final class KeyRuleBuilder extends RuleBuilder<KeyRuleBuilder> {
     private final int key;
     private Phase phase = Phase.PRESS;
     private String label = "Key";
@@ -303,8 +327,8 @@ public interface InputContext {
     }
     }
   }
-
-  public static final class ChordRuleBuilder extends RuleBuilder<ChordRuleBuilder> {
+  
+  static final class ChordRuleBuilder extends RuleBuilder<ChordRuleBuilder> {
     private final int modKey;
     private final int key;
     ChordRuleBuilder(List<Rule> out, int modKey, int key) { super(out); this.modKey = modKey; this.key = key; }

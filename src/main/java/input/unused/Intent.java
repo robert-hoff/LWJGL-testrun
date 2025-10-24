@@ -1,6 +1,9 @@
-package input;
+package input.unused;
 
 import java.util.Objects;
+
+import input.Action;
+import input.InputEvent;
 
 /**
  * A lightweight "intent" produced by {@link InputContext} from raw {@link InputEvent}s.
@@ -18,15 +21,16 @@ public final class Intent {
     SCROLL,
     KEY_PRESS,
     KEY_RELEASE,
-    COMMAND    // opaque, semantic command by name (e.g. "Undo", "Save", "TogglePlay")
+    // opaque, semantic command by name (e.g. "Undo", "Save", "TogglePlay")
+    COMMAND,
   }
 
   private final Type type;
-  private final String name;   // for COMMAND, or sub-type label like "Select", "Pan", "Rotate"
-  private final double x;      // pointer X (if relevant)
-  private final double y;      // pointer Y (if relevant)
-  private final int code;      // key code / mouse button (if relevant)
-  private final int mods;      // GLFW modifier bitfield (if relevant)
+  private final String name; // for COMMAND, or sub-type label like "Select", "Pan", "Rotate"
+  private final double x; // pointer X (if relevant)
+  private final double y; // pointer Y (if relevant)
+  private final int code; // key code / mouse button (if relevant)
+  private final int mods; // GLFW modifier bitfield (if relevant)
 
   private Intent(Type type, String name, double x, double y, int code, int mods) {
     this.type = Objects.requireNonNull(type);
