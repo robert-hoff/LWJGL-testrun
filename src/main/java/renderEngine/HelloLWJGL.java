@@ -1,10 +1,10 @@
 package renderEngine;
 
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
@@ -24,6 +24,7 @@ import org.lwjgl.system.MemoryUtil;
 
 public class HelloLWJGL {
 
+  // the long var for the window substitutes as a pointer
   private long window;
   private int winWidth = 800;
   private int winHeight = 600;
@@ -34,6 +35,10 @@ public class HelloLWJGL {
     loop();
     cleanup();
   }
+
+
+  private double lastPressTime;
+  private double pressX, pressY;
 
   private void init() {
     // Setup an error callback
@@ -57,18 +62,9 @@ public class HelloLWJGL {
       throw new RuntimeException("Failed to create the GLFW window");
     }
 
-    // Center the window
-    try (MemoryStack stack = MemoryStack.stackPush()) {
-      IntBuffer pWidth = stack.mallocInt(1);
-      IntBuffer pHeight = stack.mallocInt(1);
-      GLFW.glfwGetWindowSize(window, pWidth, pHeight);
-      GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-      GLFW.glfwSetWindowPos(
-          window,
-          (vidmode.width() - pWidth.get(0)) / 2,
-          (vidmode.height() - pHeight.get(0)) / 2
-          );
-    }
+
+    GLFW.glfwSetWindowPos(window, 300, 50);
+
 
     // Make OpenGL context current
     GLFW.glfwMakeContextCurrent(window);
@@ -77,6 +73,51 @@ public class HelloLWJGL {
     // Make window visible
     GLFW.glfwShowWindow(window);
     // initialize OpenGL bindings
+
+
+
+
+
+    // Esc, and other keypresses
+    GLFW.glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
+      if (action == GLFW.GLFW_PRESS) {
+        if (key == GLFW.GLFW_KEY_ESCAPE) {
+          GLFW.glfwSetWindowShouldClose(win, true); // close on ESC
+        }
+      }
+    });
+
+
+    // Mouse presses
+    GLFW.glfwSetMouseButtonCallback(window, (win, button, action, mods) -> {
+      if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW.GLFW_PRESS) {
+          lastPressTime = GLFW.glfwGetTime();
+          DoubleBuffer xb = BufferUtils.createDoubleBuffer(1);
+          DoubleBuffer yb = BufferUtils.createDoubleBuffer(1);
+          GLFW.glfwGetCursorPos(win, xb, yb);
+          pressX = xb.get(0);
+          pressY = yb.get(0);
+        } else if (action == GLFW.GLFW_RELEASE) {
+          DoubleBuffer xb = BufferUtils.createDoubleBuffer(1);
+          DoubleBuffer yb = BufferUtils.createDoubleBuffer(1);
+          GLFW.glfwGetCursorPos(win, xb, yb);
+          double releaseX = xb.get(0);
+          double releaseY = yb.get(0);
+          double dt = GLFW.glfwGetTime() - lastPressTime;
+          double dx = releaseX - pressX;
+          double dy = releaseY - pressY;
+          if (dt < 0.5 && Math.hypot(dx, dy) < 5.0) {
+            System.out.println("Click!");
+          }
+        }
+      }
+    });
+
+
+
+
+
 
     // which binds OpenGL to the current context defined by glfwMakeContextCurrent
     GL.createCapabilities();
@@ -193,12 +234,33 @@ public class HelloLWJGL {
   }
 
   private void cleanup() {
+
+    int[] dim = getWindowDimensions();
+    System.out.printf("(%d,%d) \n", dim[0], dim[1]);
+
     Callbacks.glfwFreeCallbacks(window);
     GLFW.glfwDestroyWindow(window);
     GLFW.glfwTerminate();
     GLFW.glfwSetErrorCallback(null).free();
   }
 
+
+
+
+  @SuppressWarnings("unused")
+  private int[] getWindowDimensions() {
+    // this is a 'try-with-resources' block
+    // requires the resource to implement AutoCloseble
+    try (MemoryStack stack = MemoryStack.stackPush()) {
+      IntBuffer pWidth = stack.mallocInt(1);
+      IntBuffer pHeight = stack.mallocInt(1);
+      GLFW.glfwGetWindowSize(window, pWidth, pHeight);
+      return new int[] {pWidth.get(0), pHeight.get(0)};
+    }
+  }
+
+
+  @SuppressWarnings("unused")
   private static void showSwingPanel() {
     SwingUtilities.invokeLater(() -> {
       JFrame frame = new JFrame("Swing Control Panel");
@@ -210,7 +272,7 @@ public class HelloLWJGL {
 
   public static void main(String[] args) {
     // creates a Swing panel that exists alongside the GLWF window
-    showSwingPanel();
+    // showSwingPanel();
     new HelloLWJGL().run();
   }
 }
