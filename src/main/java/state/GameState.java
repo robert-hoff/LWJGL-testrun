@@ -14,6 +14,9 @@ public class GameState implements AppState {
     }
 
     public void onAction(Action a) {
+      
+        System.out.println(a);
+      
         switch (a.type()) {
             case CLICK -> selectAt(a.x(), a.y());
             case DOUBLE_CLICK -> focusAt(a.x(), a.y());
