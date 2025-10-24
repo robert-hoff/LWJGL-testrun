@@ -4,7 +4,6 @@ import org.lwjgl.glfw.GLFW;
 
 import graphics.Camera;
 import graphics.OrbitCamera;
-import hoffexec.propfile.ApplicationProp;
 import input.Action;
 
 public class GameState {
