@@ -45,6 +45,8 @@ public class InputSystem {
    * @param dt        the delta time (in seconds) since the last update
    * @param dispatch  a consumer used to handle or dispatch the resulting {@link Action}s
    *  the dispatch takes a function that takes 'Action' as argument and returns nothing.
+   *  the function that is called is the onAction() defined in AppState, and implemented by
+   *  GameState.
    *
    */
   public void update(double dt, Consumer<Action> dispatch) {

@@ -1,26 +1,22 @@
 package renderEngine;
 
 import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBEasyFont;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-
 import graphics.Camera;
 import input.CursorEvent;
 import input.InputSystem;
@@ -47,13 +43,13 @@ public class HelloLWJGL {
   }
 
 
-//  private double lastPressTime;
-//  private double pressX, pressY;
+  //  private double lastPressTime;
+  //  private double pressX, pressY;
   
   private Camera camera = new Camera();
-  private Scene scene = new Scene();  
+  private Scene scene = new Scene();
   private InputSystem input = new InputSystem();
-  private AppState state = new GameState(camera, scene);  
+  private AppState state = new GameState(camera, scene);
   
 
   private void init() {
@@ -92,18 +88,18 @@ public class HelloLWJGL {
 
 
 
- // GLFW callbacks just enqueue
+    // GLFW callbacks just enqueue
     GLFW.glfwSetCursorPosCallback(window, (w, x, y) ->
-        input.enqueue(new CursorEvent(w, GLFW.glfwGetTime(), x, y)));
+    input.enqueue(new CursorEvent(w, GLFW.glfwGetTime(), x, y)));
 
     GLFW.glfwSetMouseButtonCallback(window, (w, button, action, mods) ->
-        input.enqueue(new MouseButtonEvent(w, GLFW.glfwGetTime(), button, action, mods)));
+    input.enqueue(new MouseButtonEvent(w, GLFW.glfwGetTime(), button, action, mods)));
 
     GLFW.glfwSetScrollCallback(window, (w, dx, dy) ->
-        input.enqueue(new ScrollEvent(w, GLFW.glfwGetTime(), dx, dy)));
+    input.enqueue(new ScrollEvent(w, GLFW.glfwGetTime(), dx, dy)));
 
     GLFW.glfwSetKeyCallback(window, (w, key, sc, action, mods) ->
-        input.enqueue(new KeyEvent(w, GLFW.glfwGetTime(), key, sc, action, mods)));
+    input.enqueue(new KeyEvent(w, GLFW.glfwGetTime(), key, sc, action, mods)));
 
     lastTime = GLFW.glfwGetTime();
     
@@ -141,9 +137,6 @@ public class HelloLWJGL {
       drawScene();
     });
   }
-
-  
-  
   
   
   private static final boolean SHOW_TIMESTAMP_EACH_DRAW = false;
@@ -164,11 +157,11 @@ public class HelloLWJGL {
   
   double deltaTime()
   {
-      double currentTime = GLFW.glfwGetTime();
-      double dt = currentTime - lastTime;
-      lastTime = currentTime;
-      return dt;
-  }  
+    double currentTime = GLFW.glfwGetTime();
+    double dt = currentTime - lastTime;
+    lastTime = currentTime;
+    return dt;
+  }
   
 
   private void drawScene() {
@@ -252,10 +245,6 @@ public class HelloLWJGL {
     GLFW.glfwSetErrorCallback(null).free();
   }
 
-
-
-
-  @SuppressWarnings("unused")
   private int[] getWindowDimensions() {
     // this is a 'try-with-resources' block
     // requires the resource to implement AutoCloseble
@@ -266,7 +255,6 @@ public class HelloLWJGL {
       return new int[] {pWidth.get(0), pHeight.get(0)};
     }
   }
-
 
   @SuppressWarnings("unused")
   private static void showSwingPanel() {
