@@ -36,8 +36,14 @@
 <dependencies>
 <!--~-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-  <!-- JLWGL -->
-  <dependency>
+    <dependency>
+      <groupId>hoffexec</groupId>
+      <artifactId>prop-file</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+
+    <!-- JLWGL -->
+    <dependency>
       <groupId>org.lwjgl</groupId>
       <artifactId>lwjgl</artifactId>
     </dependency>
