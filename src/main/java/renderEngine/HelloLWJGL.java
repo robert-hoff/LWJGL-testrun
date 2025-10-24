@@ -21,6 +21,16 @@ import org.lwjgl.stb.STBEasyFont;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import graphics.Camera;
+import input.CursorEvent;
+import input.InputSystem;
+import input.KeyEvent;
+import input.MouseButtonEvent;
+import input.ScrollEvent;
+import state.AppState;
+import state.GameState;
+import state.Scene;
+
 
 public class HelloLWJGL {
 
@@ -37,8 +47,14 @@ public class HelloLWJGL {
   }
 
 
-  private double lastPressTime;
-  private double pressX, pressY;
+//  private double lastPressTime;
+//  private double pressX, pressY;
+  
+  private Camera camera = new Camera();
+  private Scene scene = new Scene();  
+  private InputSystem input = new InputSystem();
+  private AppState state = new GameState(camera, scene);  
+  
 
   private void init() {
     // Setup an error callback
@@ -76,48 +92,21 @@ public class HelloLWJGL {
 
 
 
+ // GLFW callbacks just enqueue
+    GLFW.glfwSetCursorPosCallback(window, (w, x, y) ->
+        input.enqueue(new CursorEvent(w, GLFW.glfwGetTime(), x, y)));
 
+    GLFW.glfwSetMouseButtonCallback(window, (w, button, action, mods) ->
+        input.enqueue(new MouseButtonEvent(w, GLFW.glfwGetTime(), button, action, mods)));
 
-    // Esc, and other keypresses
-    GLFW.glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
-      if (action == GLFW.GLFW_PRESS) {
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
-          GLFW.glfwSetWindowShouldClose(win, true); // close on ESC
-        }
-      }
-    });
+    GLFW.glfwSetScrollCallback(window, (w, dx, dy) ->
+        input.enqueue(new ScrollEvent(w, GLFW.glfwGetTime(), dx, dy)));
 
+    GLFW.glfwSetKeyCallback(window, (w, key, sc, action, mods) ->
+        input.enqueue(new KeyEvent(w, GLFW.glfwGetTime(), key, sc, action, mods)));
 
-    // Mouse presses
-    GLFW.glfwSetMouseButtonCallback(window, (win, button, action, mods) -> {
-      if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW.GLFW_PRESS) {
-          lastPressTime = GLFW.glfwGetTime();
-          DoubleBuffer xb = BufferUtils.createDoubleBuffer(1);
-          DoubleBuffer yb = BufferUtils.createDoubleBuffer(1);
-          GLFW.glfwGetCursorPos(win, xb, yb);
-          pressX = xb.get(0);
-          pressY = yb.get(0);
-        } else if (action == GLFW.GLFW_RELEASE) {
-          DoubleBuffer xb = BufferUtils.createDoubleBuffer(1);
-          DoubleBuffer yb = BufferUtils.createDoubleBuffer(1);
-          GLFW.glfwGetCursorPos(win, xb, yb);
-          double releaseX = xb.get(0);
-          double releaseY = yb.get(0);
-          double dt = GLFW.glfwGetTime() - lastPressTime;
-          double dx = releaseX - pressX;
-          double dy = releaseY - pressY;
-          if (dt < 0.5 && Math.hypot(dx, dy) < 5.0) {
-            System.out.println("Click!");
-          }
-        }
-      }
-    });
-
-
-
-
-
+    lastTime = GLFW.glfwGetTime();
+    
 
     // which binds OpenGL to the current context defined by glfwMakeContextCurrent
     GL.createCapabilities();
@@ -153,15 +142,34 @@ public class HelloLWJGL {
     });
   }
 
+  
+  
+  
+  
   private static final boolean SHOW_TIMESTAMP_EACH_DRAW = false;
 
   private void loop() {
     while (!GLFW.glfwWindowShouldClose(window)) {
-      drawScene();
       // process window events, must be called every frame
       GLFW.glfwPollEvents();
+      input.update(deltaTime(), state::onAction);
+      
+      drawScene();
+      // input.update(deltaTime(), state::onAction);
+      
     }
   }
+  
+  private double lastTime;
+  
+  double deltaTime()
+  {
+      double currentTime = GLFW.glfwGetTime();
+      double dt = currentTime - lastTime;
+      lastTime = currentTime;
+      return dt;
+  }  
+  
 
   private void drawScene() {
     if (SHOW_TIMESTAMP_EACH_DRAW) {
