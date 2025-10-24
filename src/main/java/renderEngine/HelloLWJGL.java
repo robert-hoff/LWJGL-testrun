@@ -129,9 +129,10 @@ public class HelloLWJGL {
 
 
     // LOAD MODEL
-    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\89_Beaver.txt"));
-    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\res\\64_Sparrow.txt"));
-    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\res\\55_Butterfly.txt"));
+    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\89_Beaver.txt"));
+    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\64_Sparrow.txt"));
+    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\55_Butterfly.txt"));
+    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\30_CherryTree.txt"));
 
     mesh = Mesh.create(bps.get(1).getFullModelData());
 
