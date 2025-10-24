@@ -26,6 +26,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import graphics.Camera;
 import graphics.Mesh;
+import graphics.OrbitCamera;
 import graphics.Shader;
 import input.CursorEvent;
 import input.InputSystem;
@@ -57,10 +58,10 @@ public class HelloLWJGL {
   //  private double lastPressTime;
   //  private double pressX, pressY;
 
-  private Camera camera = new Camera();
-  private Scene scene = new Scene();
+  // private OrbitCamera camera = new OrbitCamera();
+  // private Scene scene = new Scene();
   private InputSystem input = new InputSystem();
-  private GameState gameState = new GameState(camera, scene);
+  private GameState gameState = new GameState();
 
 
   // Mesh mesh = Mesh.create(modelFloatArray);
@@ -121,14 +122,18 @@ public class HelloLWJGL {
     lastTime = GLFW.glfwGetTime();
 
 
+
     // ** GL CONTEXT **
     // which binds OpenGL to the current context defined by glfwMakeContextCurrent
     GL.createCapabilities();
 
 
     // LOAD MODEL
-    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\res\\89_Beaver.txt"));
-    mesh = Mesh.create(bps.get(0).getFullModelData());
+    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\89_Beaver.txt"));
+    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\res\\64_Sparrow.txt"));
+    // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\res\\55_Butterfly.txt"));
+
+    mesh = Mesh.create(bps.get(1).getFullModelData());
 
     String vertexSource = Files.readString(Paths.get(
         Shader.class.getResource("/glsl/mesh.vert").toURI()));
@@ -147,6 +152,7 @@ public class HelloLWJGL {
     // backface culling enabled
     GL11.glEnable(GL11.GL_CULL_FACE);
     GL11.glCullFace(GL11.GL_BACK);
+    GL11.glEnable(GL11.GL_DEPTH_TEST);
 
     // after creating the context and calling GL.createCapabilities()
     try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -193,6 +199,8 @@ public class HelloLWJGL {
       GLFW.glfwPollEvents();
       GL11.glClearColor(1, 1, 1, 1);
       GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+      // GL11.glDisable(GL11.GL_CULL_FACE);
+      // GL11.glFrontFace(GL11.GL_CCW);
 
       double dt = deltaTime();
       // System.out.printf("dt=%5.3f \n", dt);
@@ -201,15 +209,16 @@ public class HelloLWJGL {
       // drawScene();
       // each frame:
       shader.bind();
-      shader.set("uViewProj", viewProjMatrix());
+      Matrix4f viewProjMatrix = gameState.camera.getViewProj(gameState.winWidth, gameState.winHeight);
+      // Matrix4f modelMatrix = new Matrix4f();
+
+      shader.set("uViewProj", viewProjMatrix);
       shader.set("uModel", modelMatrix());
       // float timeSeconds = (System.nanoTime() - startTime) / 1_000_000_000.0f;
       shader.set("uTime", 0.0f);
       mesh.draw();
       shader.unbind();
       GLFW.glfwSwapBuffers(window);
-
-
 
       // limit the frame rate
       double elapsed = GLFW.glfwGetTime() - lastTime;
@@ -221,8 +230,6 @@ public class HelloLWJGL {
           e.printStackTrace();
         }
       }
-
-
     }
   }
 

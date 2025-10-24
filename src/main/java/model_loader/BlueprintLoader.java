@@ -45,10 +45,10 @@ public class BlueprintLoader {
     reader.nextLine();
     Vector3f mins = reader.getNextVector();
     // mins.scale(size);
-    mins.mul(size);
+    // mins.mul(size);
     Vector3f maxs = reader.getNextVector();
     // maxs.scale(size);
-    maxs.mul(size);
+    // maxs.mul(size);
     float increaseFactor = reader.getNextFloat();
     boolean additive = false;
     AABB[] extraAabbs = null;
@@ -74,10 +74,10 @@ public class BlueprintLoader {
     for(int i=0;i<count;i++){
       Vector3f mins = reader.getNextVector();
       // mins.scale(size);
-      mins.mul(size);
+      // mins.mul(size);
       Vector3f maxs = reader.getNextVector();
       // maxs.scale(size);
-      maxs.mul(size);
+      // maxs.mul(size);
       aabbs[i] = new AABB(mins, maxs);
     }
     return aabbs;
@@ -139,6 +139,7 @@ public class BlueprintLoader {
       reader.nextLine();
       // ComponentType type = ComponentType.valueOf(reader.getNextString());
       String component_string = reader.getNextString();
+      // System.out.println(component_string);
       // ComponentBlueprint component = type.loadComponent(reader, blueprint);
       // blueprint.addComponent(component);
     }

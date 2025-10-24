@@ -9,25 +9,25 @@ public class EventHandler {
   private static final double CLICK_TIME = 0.20; // seconds
   private static final double CLICK_DIST = 5.0; // pixels
   private static final double DOUBLE_CLICK_TIME = 0.30;
-  
+
   // Keyboard-driven motion amounts (in "pixel-like" units)
   private static final double KEY_PAN_STEP = 10.0;
   private static final double KEY_ZOOM_STEP = 1.0;
-  
+
   private boolean lDown = false;
   private boolean orbitHeldByKeyboard = false; // ALT toggles orbit intent-like behavior
-  
+
   private double pressTime;
   private double px, py; // press cursor
   private double lastClickTime = -10;
-  
+
   private double cx, cy; // current cursor
   private double dxAccum, dyAccum;
-  
+
 
   List<Action> process(InputEvent e) {
     List<Action> out = new ArrayList<Action>();
-    
+
     // Track cursor + accumulate deltas
     if (e instanceof CursorEvent c) {
       dxAccum += c.x() - cx;
@@ -36,12 +36,17 @@ public class EventHandler {
       cy = c.y();
     }
     // System.out.printf("dxAccum=%5.3f, dyAccum=%5.3f, cx=%5.3f, cy=%5.3f \n", dxAccum, dyAccum, cx, cy);
-    
-    
+
+
     // Mouse button (left)
     if (e instanceof MouseButtonEvent mb && mb.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
       if (mb.action() == GLFW.GLFW_PRESS) {
-        lDown = true; pressTime = mb.timeSeconds(); px = cx; py = cy;
+        lDown = true;
+        pressTime = mb.timeSeconds();
+        px = cx;
+        py = cy;
+        dxAccum = 0;
+        dyAccum = 0;
         //        if (hasIntent(intents, Intent.Type.ORBIT) || orbitHeldByKeyboard) {
         //          out.add(new Action(ActionType.ORBIT_START, cx, cy, mb.button(), mb.mods(), 0, 0));
         //        }
@@ -64,15 +69,18 @@ public class EventHandler {
         } else {
           out.add(new Action(ActionType.DRAG_END, cx, cy, mb.button(), mb.mods(), 0, 0));
         }
-        lDown = false; dxAccum = dyAccum = 0;
+        lDown = false;
+        dxAccum = 0;
+        dyAccum = 0;
       }
     }
-    
+
 
     // Mouse drag updates
     if (lDown && Math.hypot(cx - px, cy - py) >= CLICK_DIST) {
       out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, GLFW.GLFW_MOUSE_BUTTON_LEFT, 0, dxAccum, dyAccum));
-      dxAccum = dyAccum = 0;
+      dxAccum = 0;
+      dyAccum = 0;
     }
 
     // Mouse wheel => zoom
@@ -133,13 +141,13 @@ public class EventHandler {
         //          out.add(new Action(ActionType.DRAG_END, cx, cy, GLFW.GLFW_MOUSE_BUTTON_LEFT, mods, 0, 0));
         //          lDown = false; dxAccum = dyAccum = 0;
         //        }
-        
+
         if (key == GLFW.GLFW_KEY_ESCAPE) {
           out.add(new Action(ActionType.SHUTDOWN, 0, 0, 0, 0, 0, 0));
         }
       }
     }
-    
+
     return out;
   }
 
@@ -149,7 +157,7 @@ public class EventHandler {
   List<Action> updateTime(double dt) {
     return List.of();
   }
-  
+
 }
 
 

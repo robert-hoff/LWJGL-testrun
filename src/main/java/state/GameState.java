@@ -1,11 +1,14 @@
 package state;
 
+import org.lwjgl.glfw.GLFW;
+
 import graphics.Camera;
+import graphics.OrbitCamera;
 import hoffexec.propfile.ApplicationProp;
 import input.Action;
 
 public class GameState {
-  
+
   private final String TITLE_DEFAULT = "Test App";
   private final int WIN_XPOS_DEFAULT = 500;
   private final int WIN_YPOS_DEFAULT = 50;
@@ -14,24 +17,24 @@ public class GameState {
   private final boolean SHOW_AXIS_DEFAULT = true;
   private final boolean SHOW_STATUS_TEXT_DEFAULT = true;
 
-  private final Camera camera;
-  private final Scene scene;
+  public final OrbitCamera camera = new OrbitCamera();
+  // private final Scene scene;
   private boolean orbiting;
   private boolean shutdown = false;
-  
+
   public int winXPos, winYPos, winHeight, winWidth;
   public boolean showAxis;
   public boolean showStatusText;
   public String title = TITLE_DEFAULT;
-  
+
   private final float DEFAULT_CAMERA_XROT = 10; // degrees
   private final float DEFAULT_CAMERA_YROT = -20;
   private final float[] DEFAULT_CAMERA_POS = {1.8f, 1f, 4f};
-  
-  public GameState(Camera camera, Scene scene) {
-    this.camera = camera;
-    this.scene = scene;
-    
+
+  public GameState() {
+    // this.camera = camera;
+    // this.scene = scene;
+
     ApplicationProp prop = new ApplicationProp();
     winXPos = prop.readInt("winXPos", WIN_XPOS_DEFAULT);
     winYPos = prop.readInt("winYPos", WIN_YPOS_DEFAULT);
@@ -39,7 +42,7 @@ public class GameState {
     winWidth = prop.readInt("winWidth", WIN_WIDTH_DEFAULT);
     showAxis = prop.readBoolean("showAxis", SHOW_AXIS_DEFAULT);
     showStatusText = prop.readBoolean("showStatusText", SHOW_STATUS_TEXT_DEFAULT);
-    
+
     float xRot, yRot, cameraX, cameraY, cameraZ;
     xRot = prop.readFloat("xRot", DEFAULT_CAMERA_XROT);
     yRot = prop.readFloat("yRot", DEFAULT_CAMERA_YROT);
@@ -51,19 +54,22 @@ public class GameState {
 
 
   public void onAction(Action a) {
-    
+
     // System.out.println(a);
-    
+
     switch (a.type()) {
       case CLICK -> selectAt(a.x(), a.y());
       case DOUBLE_CLICK -> focusAt(a.x(), a.y());
       case ORBIT_START -> orbiting = true;
-      case ORBIT_UPDATE -> { if (orbiting) {
-        camera.orbit(a.dx(), a.dy());
-      } }
+      // case ORBIT_UPDATE -> { if (orbiting) { camera.orbit(a.dx(), a.dy()); } }
       case ORBIT_END -> orbiting = false;
-      case DRAG_UPDATE -> maybeDragSelection(a.dx(), a.dy());
-      case ZOOM -> camera.dolly(a.dy());
+      case DRAG_UPDATE -> {
+        camera.rotate((float) -a.dx() * 0.005f, (float) a.dy() * 0.005f);
+      }
+      case ZOOM -> {
+        // camera.dolly(a.dy());
+        camera.zoom((float) a.dy());
+      }
 
       case SHUTDOWN -> this.shutdown = true;
       default -> {}
@@ -74,7 +80,7 @@ public class GameState {
   private void focusAt(double x, double y) { /* fit camera to hit */ }
   private void maybeDragSelection(double dx, double dy) { /* translate gizmo */ }
 
-  
+
   //
   public void saveState(int winXPos, int winYPos, int winWidth, int winHeight) {
     this.winXPos = winXPos;
@@ -83,7 +89,7 @@ public class GameState {
     this.winHeight = winHeight;
     savePropertiesToFile();
   }
-  
+
   public void savePropertiesToFile() {
     ApplicationProp prop = new ApplicationProp();
     prop.addProperty("winXPos", ""+winXPos);
@@ -99,11 +105,11 @@ public class GameState {
     //    prop.addProperty("cameraZ", ""+cameraState.cameraZ);
     prop.saveToFile();
   }
-  
+
   public int[] getWin() {
     return new int[] {winXPos, winYPos, winWidth, winHeight};
   }
-  
+
   public boolean shutDown() {
     return shutdown;
   }
