@@ -40,11 +40,6 @@ public class EventHandler {
     // System.out.printf("dxAccum=%5.3f, dyAccum=%5.3f, cx=%5.3f, cy=%5.3f \n", dxAccum, dyAccum, cx, cy);
 
 
-
-
-
-
-
     // Mouse button (left)
     if (e instanceof MouseButtonEvent mb && mb.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 
@@ -211,9 +206,6 @@ public class EventHandler {
   }
 
 }
-
-
-
 
 
 

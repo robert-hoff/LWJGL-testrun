@@ -17,7 +17,7 @@ public class GameState {
   private final boolean SHOW_STATUS_TEXT_DEFAULT = true;
 
   // public final OrbitCamera camera = new OrbitCamera();
-  public final Camera camera = new Camera();
+  public Camera camera;
 
   // private final Scene scene;
   private boolean orbiting;
@@ -31,8 +31,8 @@ public class GameState {
   public boolean showStatusText;
   public String title = TITLE_DEFAULT;
 
-  private final float DEFAULT_CAMERA_XROT = 10; // degrees
-  private final float DEFAULT_CAMERA_YROT = -20;
+  private final float DEFAULT_CAMERA_YAW = 10; // degrees
+  private final float DEFAULT_CAMERA_PITCH = -20;
   private final float[] DEFAULT_CAMERA_POS = {1.8f, 1f, 4f};
 
   private long glfwWindow;
@@ -51,13 +51,16 @@ public class GameState {
     showAxis = prop.readBoolean("showAxis", SHOW_AXIS_DEFAULT);
     showStatusText = prop.readBoolean("showStatusText", SHOW_STATUS_TEXT_DEFAULT);
 
-    float xRot, yRot, cameraX, cameraY, cameraZ;
-    xRot = prop.readFloat("xRot", DEFAULT_CAMERA_XROT);
-    yRot = prop.readFloat("yRot", DEFAULT_CAMERA_YROT);
+    float yaw, pitch, cameraX, cameraY, cameraZ;
+    yaw = prop.readFloat("yaw", DEFAULT_CAMERA_YAW);
+    pitch = prop.readFloat("pitch", DEFAULT_CAMERA_PITCH);
     cameraX = prop.readFloat("cameraX", DEFAULT_CAMERA_POS[0]);
     cameraY = prop.readFloat("cameraY", DEFAULT_CAMERA_POS[1]);
     cameraZ = prop.readFloat("cameraZ", DEFAULT_CAMERA_POS[2]);
     // cameraState = new CameraState(xRot,yRot,cameraX,cameraY,cameraZ);
+    camera = new Camera(yaw, pitch);
+    camera.setPosition(cameraX, cameraY, cameraZ);
+    camera.setAspect(winWidth, winHeight);
   }
 
 
@@ -134,7 +137,6 @@ public class GameState {
   private void focusAt(double x, double y) { /* fit camera to hit */ }
   private void maybeDragSelection(double dx, double dy) { /* translate gizmo */ }
 
-
   public void saveState(int winXPos, int winYPos, int winWidth, int winHeight) {
     this.winXPos = winXPos;
     this.winYPos = winYPos;
@@ -151,11 +153,11 @@ public class GameState {
     prop.addProperty("winHeight", ""+winHeight);
     prop.addProperty("showAxis", ""+showAxis);
     prop.addProperty("showStatusText", ""+showStatusText);
-    //    prop.addProperty("xRot", ""+cameraState.xRot);
-    //    prop.addProperty("yRot", ""+cameraState.yRot);
-    //    prop.addProperty("cameraX", ""+cameraState.cameraX);
-    //    prop.addProperty("cameraY", ""+cameraState.cameraY);
-    //    prop.addProperty("cameraZ", ""+cameraState.cameraZ);
+    prop.addProperty("yaw", ""+camera.getYaw());
+    prop.addProperty("pitch", ""+camera.getPitch());
+    prop.addProperty("cameraX", ""+camera.position.x);
+    prop.addProperty("cameraY", ""+camera.position.y);
+    prop.addProperty("cameraZ", ""+camera.position.z);
     prop.saveToFile();
   }
 

@@ -20,11 +20,11 @@ public class Camera {
 
   public Quaternionf rotation;
   // yaw rotates around the world Y axis (turning left/right)
-  double yaw = -140;
+  // double yaw = -140;
   // pitch rotates around the local X axis (looking up/down).
-  double pitch = -25;
+  // double pitch = -25;
 
-  public Camera() {
+  public Camera(double yaw, double pitch) {
     rotation = new Quaternionf()
         .rotateY((float) Math.toRadians(yaw))
         .rotateX((float) Math.toRadians(pitch));
@@ -61,6 +61,16 @@ public class Camera {
     rotation = new Quaternionf()
         .rotateY((float) Math.toRadians(yaw))
         .rotateX((float) Math.toRadians(pitch));
+  }
+
+  public void setOrientation(double yaw, double pitch) {
+    rotation = new Quaternionf()
+        .rotateY((float) Math.toRadians(yaw))
+        .rotateX((float) Math.toRadians(pitch));
+  }
+
+  public void setPosition(float x, float y, float z) {
+    position = new Vector3f(x,y,z);
   }
 
   // move backwards with negative dt
