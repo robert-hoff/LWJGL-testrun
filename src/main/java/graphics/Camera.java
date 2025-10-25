@@ -17,6 +17,7 @@ public class Camera {
 
   public Vector3f position = new Vector3f(-3,3,-3);
   public float aspect = 6f/4;
+  private float PI = (float) Math.PI;
 
   public Quaternionf rotation;
   // yaw rotates around the world Y axis (turning left/right)
@@ -24,10 +25,8 @@ public class Camera {
   // pitch rotates around the local X axis (looking up/down).
   // double pitch = -25;
 
-  public Camera(double yaw, double pitch) {
-    rotation = new Quaternionf()
-        .rotateY((float) Math.toRadians(yaw))
-        .rotateX((float) Math.toRadians(pitch));
+  public Camera(float yaw, float pitch) {
+    rotation = new Quaternionf().rotateY(yaw).rotateX(pitch);
   }
 
   public Matrix4f viewMat() {
@@ -37,9 +36,7 @@ public class Camera {
   }
 
   public Matrix4f projMat() {
-    Matrix4f projMatrix = new Matrix4f()
-        .perspective((float)Math.toRadians(60.0f), aspect, 0.1f, 1000f);
-    return projMatrix;
+    return new Matrix4f().perspective(PI/3, aspect, 0.1f, 1000f);
   }
 
   public Matrix4f viewProjMat() {
@@ -47,26 +44,20 @@ public class Camera {
     return projMat().mul(viewMat());
   }
 
-  public void rotateAxisY(double deltaYaw) {
-    double yaw = getYaw() + deltaYaw/5;
-    double pitch = getPitch();
-    rotation = new Quaternionf()
-        .rotateY((float) Math.toRadians(yaw))
-        .rotateX((float) Math.toRadians(pitch));
+  public void rotateAxisY(float deltaYaw) {
+    float yaw = getYaw() + deltaYaw/200;
+    float pitch = getPitch();
+    rotation = new Quaternionf().rotateY(yaw).rotateX(pitch);
   }
 
-  public void rotateAxisX(double deltaPitch) {
-    double yaw = getYaw();
-    double pitch = getPitch()+deltaPitch/5;
-    rotation = new Quaternionf()
-        .rotateY((float) Math.toRadians(yaw))
-        .rotateX((float) Math.toRadians(pitch));
+  public void rotateAxisX(float deltaPitch) {
+    float yaw = getYaw();
+    float pitch = getPitch()+deltaPitch/200;
+    rotation = new Quaternionf().rotateY(yaw).rotateX(pitch);
   }
 
-  public void setOrientation(double yaw, double pitch) {
-    rotation = new Quaternionf()
-        .rotateY((float) Math.toRadians(yaw))
-        .rotateX((float) Math.toRadians(pitch));
+  public void setOrientation(float yaw, float pitch) {
+    rotation = new Quaternionf().rotateY(yaw).rotateX(pitch);
   }
 
   public void setPosition(float x, float y, float z) {
@@ -104,18 +95,15 @@ public class Camera {
     this.aspect = (float) winWidth / winHeight;
   }
 
+
+  private final Vector3f angles = new Vector3f();
+
   public float getYaw() {
-    Vector3f euler = new Vector3f();
-    rotation.getEulerAnglesYXZ(euler);
-    float yaw   = (float) Math.toDegrees(euler.y);
-    return yaw;
+    return rotation.getEulerAnglesYXZ(angles).y;
   }
 
   public float getPitch() {
-    Vector3f euler = new Vector3f();
-    rotation.getEulerAnglesYXZ(euler);
-    float pitch = (float) Math.toDegrees(euler.x);
-    return pitch;
+    return rotation.getEulerAnglesYXZ(angles).x;
   }
 
   public void updateAspect(int winWidth, int winHeight) {

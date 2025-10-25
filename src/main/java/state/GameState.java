@@ -88,14 +88,14 @@ public class GameState {
       }
       case MOUSE_MOVE -> {
         if (!showCursor) {
-          camera.rotateAxisY(-a.dx());
-          camera.rotateAxisX(-a.dy());
+          camera.rotateAxisY((float) -a.dx());
+          camera.rotateAxisX((float) -a.dy());
         }
       }
       case DRAG_UPDATE -> {
         // System.out.printf("a.dx=%5.3f a.dy=%5.3f \n", a.dx(), a.dy());
-        camera.rotateAxisY(-a.dx());
-        camera.rotateAxisX(-a.dy());
+        camera.rotateAxisY((float) -a.dx());
+        camera.rotateAxisX((float) -a.dy());
       }
       case ZOOM -> {
         camera.moveForward((float) a.dy());
