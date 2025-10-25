@@ -40,8 +40,15 @@ public class EventHandler {
     // System.out.printf("dxAccum=%5.3f, dyAccum=%5.3f, cx=%5.3f, cy=%5.3f \n", dxAccum, dyAccum, cx, cy);
 
 
+
+
+
+
+
     // Mouse button (left)
     if (e instanceof MouseButtonEvent mb && mb.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+
+      // -- mouse button press
       if (mb.action() == GLFW.GLFW_PRESS) {
         lDown = true;
         pressTime = mb.timeSeconds();
@@ -49,17 +56,12 @@ public class EventHandler {
         py = cy;
         dxAccum = 0;
         dyAccum = 0;
-        //        if (hasIntent(intents, Intent.Type.ORBIT) || orbitHeldByKeyboard) {
-        //          out.add(new Action(ActionType.ORBIT_START, cx, cy, mb.button(), mb.mods(), 0, 0));
-        //        }
-      } else if (mb.action() == GLFW.GLFW_RELEASE) {
+      }
+
+      // -- mouse button release
+      if (mb.action() == GLFW.GLFW_RELEASE) {
         boolean smallMove = Math.hypot(cx - px, cy - py) < CLICK_DIST;
         double dt = mb.timeSeconds() - pressTime;
-
-        //        if (hasIntent(intents, Intent.Type.ORBIT) || orbitHeldByKeyboard) {
-        //          out.add(new Action(ActionType.ORBIT_END, cx, cy, mb.button(), mb.mods(), 0, 0));
-        //        }
-
         if (smallMove && dt < CLICK_TIME) {
           if (mb.timeSeconds() - lastClickTime < DOUBLE_CLICK_TIME) {
             out.add(new Action(ActionType.DOUBLE_CLICK, cx, cy, mb.button(), mb.mods(), 0, 0, ""));
@@ -91,12 +93,22 @@ public class EventHandler {
     }
 
 
-    // Mouse drag updates
+    // Mouse drag updates (while holding mouse down)
     if (lDown && Math.hypot(cx - px, cy - py) >= CLICK_DIST) {
       out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, GLFW.GLFW_MOUSE_BUTTON_LEFT, 0, dxAccum, dyAccum, ""));
       dxAccum = 0;
       dyAccum = 0;
+      return out;
     }
+
+    // add mouse move in case camera in FP mode
+    if (e instanceof CursorEvent c) {
+      out.add(new Action(ActionType.MOUSE_MOVE, cx, cy, 0, 0, dxAccum, dyAccum, ""));
+      dxAccum = 0;
+      dyAccum = 0;
+    }
+
+
 
     // Mouse wheel => zoom
     if (e instanceof ScrollEvent s) {
@@ -161,7 +173,27 @@ public class EventHandler {
           out.add(new Action(ActionType.SHUTDOWN, 0, 0, 0, 0, 0, 0, ""));
         }
         if (key == GLFW.GLFW_KEY_1) {
+          dxAccum = 0;
+          dyAccum = 0;
           out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "1"));
+        }
+        if (key == GLFW.GLFW_KEY_W) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "w"));
+        }
+        if (key == GLFW.GLFW_KEY_S) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "s"));
+        }
+        if (key == GLFW.GLFW_KEY_A) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "a"));
+        }
+        if (key == GLFW.GLFW_KEY_D) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "d"));
+        }
+        if (key == GLFW.GLFW_KEY_R) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "r"));
+        }
+        if (key == GLFW.GLFW_KEY_F) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "f"));
         }
       }
     }

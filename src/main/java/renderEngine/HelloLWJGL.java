@@ -35,10 +35,7 @@ import state.GameState;
 
 public class HelloLWJGL {
 
-  // the glfw window pointer
   private long glfwWindow;
-  //  private int winWidth = 800;
-  //  private int winHeight = 600;
 
   public void run() throws Exception {
     System.out.printf("Starting LWJGL %s! \n", Version.getVersion());
@@ -47,17 +44,10 @@ public class HelloLWJGL {
     cleanup();
   }
 
-
   private double startTime;
-  //  private double pressX, pressY;
-
-  // private OrbitCamera camera = new OrbitCamera();
-  // private Scene scene = new Scene();
   private InputSystem input = new InputSystem();
   private GameState gameState;
 
-
-  // Mesh mesh = Mesh.create(modelFloatArray);
   Mesh mesh;
   Axes axes;
   Shader shaderMesh;
@@ -65,8 +55,7 @@ public class HelloLWJGL {
 
   private void init() throws Exception {
 
-
-    // Setup an error callback
+    // error callback
     GLFWErrorCallback.createPrint(System.err).set();
 
     if (!GLFW.glfwInit()) {
@@ -158,10 +147,6 @@ public class HelloLWJGL {
     // Enable multisampling (must be after context creation)
     GL11.glEnable(GL13.GL_MULTISAMPLE);
 
-    // GL11.glClearColor(0.0f, 0.5f, 1.0f, 0.0f);
-    GL11.glClearColor(0,0,0,0); // black
-    // GL11.glClearColor(1,1,1,1); // white
-
     // backface culling enabled
     GL11.glEnable(GL11.GL_CULL_FACE);
     GL11.glCullFace(GL11.GL_BACK);
@@ -178,8 +163,7 @@ public class HelloLWJGL {
     // update glViewport when window is resized
     GLFW.glfwSetFramebufferSizeCallback(glfwWindow, (win, width, height) -> {
       GL11.glViewport(0, 0, width, height);
-      gameState.winWidth = width;
-      gameState.winHeight = height;
+      gameState.updateViewport(width, height);
     });
 
     // do a render pass also when the screen resizes
@@ -208,7 +192,7 @@ public class HelloLWJGL {
         GLFW.glfwSetWindowShouldClose(glfwWindow, true);
       }
 
-      // process window events, must be called every frame
+      // process mouse and keyboard events every frame
       GLFW.glfwPollEvents();
 
       // *draw scene*
@@ -252,9 +236,7 @@ public class HelloLWJGL {
     return modelMatrix;
   }
 
-
   private double lastTime = 0;
-
   double deltaTime()
   {
     double currentTime = GLFW.glfwGetTime();
@@ -262,7 +244,6 @@ public class HelloLWJGL {
     lastTime = currentTime;
     return dt;
   }
-
 
   private void drawScene() {
     GL11.glClearColor(1, 1, 1, 1);
@@ -274,9 +255,7 @@ public class HelloLWJGL {
     // System.out.printf("dt=%5.3f \n", dt);
     input.update(dt, gameState::onAction);
 
-    // drawScene();
-    // each frame:
-    Matrix4f viewProjMatrix = gameState.camera.getViewProj(gameState.winWidth, gameState.winHeight);
+    Matrix4f viewProjMatrix = gameState.camera.viewProjMat();
 
     shaderMesh.bind();
     shaderMesh.set("uViewProj", viewProjMatrix);

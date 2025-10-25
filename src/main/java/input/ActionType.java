@@ -22,5 +22,8 @@ public enum ActionType {
   SHUTDOWN,
   KEY,
   RIGHTCLICK,
+  MOVE_FORWARD,
+  MOVE_BACKWARDS,
+  MOUSE_MOVE,
 }
 
