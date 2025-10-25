@@ -35,10 +35,10 @@ import state.GameState;
 
 public class HelloLWJGL {
 
-  // the long var for the window substitutes as a pointer
-  private long window;
-  private int winWidth = 800;
-  private int winHeight = 600;
+  // the glfw window pointer
+  private long glfwWindow;
+  //  private int winWidth = 800;
+  //  private int winHeight = 600;
 
   public void run() throws Exception {
     System.out.printf("Starting LWJGL %s! \n", Version.getVersion());
@@ -81,42 +81,42 @@ public class HelloLWJGL {
     // Request a multisampled framebuffer: 4x MSAA is a good default
     GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
 
-    // Create the window
-    window = GLFW.glfwCreateWindow(winWidth, winHeight, "Hello LWJGL", MemoryUtil.NULL, MemoryUtil.NULL);
-    if (window == MemoryUtil.NULL) {
+    // Create a size (100,100) window, resized by gameState
+    glfwWindow = GLFW.glfwCreateWindow(100, 100, "Hello LWJGL", MemoryUtil.NULL, MemoryUtil.NULL);
+    if (glfwWindow == MemoryUtil.NULL) {
       throw new RuntimeException("Failed to create the GLFW window");
     }
 
-    gameState = new GameState(window);
+    gameState = new GameState(glfwWindow);
     int[] winD = gameState.getWin();
-    GLFW.glfwSetWindowPos(window, winD[0], winD[1]);
-    GLFW.glfwSetWindowSize(window, winD[2], winD[3]);
+    GLFW.glfwSetWindowPos(glfwWindow, winD[0], winD[1]);
+    GLFW.glfwSetWindowSize(glfwWindow, winD[2], winD[3]);
 
 
     // Make OpenGL context current
-    GLFW.glfwMakeContextCurrent(window);
+    GLFW.glfwMakeContextCurrent(glfwWindow);
     // Enable v-sync
     GLFW.glfwSwapInterval(1);
     // Make window visible
-    GLFW.glfwShowWindow(window);
+    GLFW.glfwShowWindow(glfwWindow);
     // initialize OpenGL bindings
 
 
     // GLFW callbacks just enqueue
-    GLFW.glfwSetCursorPosCallback(window, (w, x, y) ->
+    GLFW.glfwSetCursorPosCallback(glfwWindow, (w, x, y) ->
     input.enqueue(new CursorEvent(w, GLFW.glfwGetTime(), x, y)));
 
-    GLFW.glfwSetMouseButtonCallback(window, (w, button, action, mods) ->
+    GLFW.glfwSetMouseButtonCallback(glfwWindow, (w, button, action, mods) ->
     input.enqueue(new MouseButtonEvent(w, GLFW.glfwGetTime(), button, action, mods)));
 
-    GLFW.glfwSetScrollCallback(window, (w, dx, dy) ->
+    GLFW.glfwSetScrollCallback(glfwWindow, (w, dx, dy) ->
     input.enqueue(new ScrollEvent(w, GLFW.glfwGetTime(), dx, dy)));
 
-    GLFW.glfwSetKeyCallback(window, (w, key, sc, action, mods) ->
+    GLFW.glfwSetKeyCallback(glfwWindow, (w, key, sc, action, mods) ->
     input.enqueue(new KeyEvent(w, GLFW.glfwGetTime(), key, sc, action, mods)));
 
     // Set callback to detect movement
-    GLFW.glfwSetWindowPosCallback(window, new GLFWWindowPosCallback() {
+    GLFW.glfwSetWindowPosCallback(glfwWindow, new GLFWWindowPosCallback() {
       @Override
       public void invoke(long window, int xpos, int ypos) {
         gameState.winXPos = xpos;
@@ -129,7 +129,7 @@ public class HelloLWJGL {
 
 
     // ** GL CONTEXT **
-    // which binds OpenGL to the current context defined by glfwMakeContextCurrent
+    // -> which binds OpenGL to the current context defined by glfwMakeContextCurrent
     GL.createCapabilities();
 
 
@@ -171,74 +171,49 @@ public class HelloLWJGL {
     try (MemoryStack stack = MemoryStack.stackPush()) {
       IntBuffer w = stack.mallocInt(1);
       IntBuffer h = stack.mallocInt(1);
-      GLFW.glfwGetFramebufferSize(window, w, h); // use *framebuffer* size (accounts for HiDPI)
+      GLFW.glfwGetFramebufferSize(glfwWindow, w, h); // use *framebuffer* size (accounts for HiDPI)
       GL11.glViewport(0, 0, w.get(0), h.get(0));
     }
 
     // update glViewport when window is resized
-    GLFW.glfwSetFramebufferSizeCallback(window, (win, width, height) -> {
+    GLFW.glfwSetFramebufferSizeCallback(glfwWindow, (win, width, height) -> {
       GL11.glViewport(0, 0, width, height);
-      this.winWidth = width;
-      this.winHeight = height;
+      gameState.winWidth = width;
+      gameState.winHeight = height;
     });
 
     // do a render pass also when the screen resizes
-    //    GLFW.glfwSetWindowRefreshCallback(window, win -> {
-    //      drawScene();
-    //    });
+    // -> keyboard and mouse events are by default paused
+    // -> additional renders are recommended from here
+    GLFW.glfwSetWindowRefreshCallback(glfwWindow, win -> {
+      drawScene();
+    });
   }
 
-  final int TARGET_FPS = 10;
+  final int TARGET_FPS = 60;
   final double FRAME_TIME = 1.0 / TARGET_FPS;
 
   private void loop() {
-    while (!GLFW.glfwWindowShouldClose(window)) {
+    while (!GLFW.glfwWindowShouldClose(glfwWindow)) {
       if (gameState.shutDown()) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
           IntBuffer xpos = stack.mallocInt(1);
           IntBuffer ypos = stack.mallocInt(1);
           IntBuffer width = stack.mallocInt(1);
           IntBuffer height = stack.mallocInt(1);
-          GLFW.glfwGetWindowPos(window, xpos, ypos);
-          GLFW.glfwGetWindowSize(window, width, height);
+          GLFW.glfwGetWindowPos(glfwWindow, xpos, ypos);
+          GLFW.glfwGetWindowSize(glfwWindow, width, height);
           gameState.saveState(xpos.get(0), ypos.get(0), width.get(0), height.get(0));
         }
-        GLFW.glfwSetWindowShouldClose(window, true);
+        GLFW.glfwSetWindowShouldClose(glfwWindow, true);
       }
 
       // process window events, must be called every frame
       GLFW.glfwPollEvents();
-      GL11.glClearColor(1, 1, 1, 1);
-      GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-      // GL11.glDisable(GL11.GL_CULL_FACE);
-      // GL11.glFrontFace(GL11.GL_CCW);
 
-      double dt = deltaTime();
-      // System.out.printf("dt=%5.3f \n", dt);
-      input.update(dt, gameState::onAction);
+      // *draw scene*
+      drawScene();
 
-      // drawScene();
-      // each frame:
-      Matrix4f viewProjMatrix = gameState.camera.getViewProj(gameState.winWidth, gameState.winHeight);
-
-      shaderMesh.bind();
-      shaderMesh.set("uViewProj", viewProjMatrix);
-      shaderMesh.set("uModel", modelMatrix(2,0,2));
-      float timeSeconds = (float) ((System.nanoTime() - startTime) / 1_000_000_000.0f);
-      // shaderMesh.set("uTime", timeSeconds);
-      mesh.draw();
-      shaderMesh.unbind();
-
-      if (gameState.showAxis) {
-        shaderAxes.bind();
-        shaderAxes.set("uLen", 3.0f); // scale the axis
-        Matrix4f mvp = new Matrix4f(viewProjMatrix).mul(new Matrix4f().identity());
-        shaderAxes.set("uMVP", mvp);
-        axes.draw();
-        shaderAxes.unbind();
-      }
-
-      GLFW.glfwSwapBuffers(window);
       // limit the frame rate
       double elapsed = GLFW.glfwGetTime() - lastTime;
       double sleepTime = FRAME_TIME - elapsed;
@@ -290,7 +265,38 @@ public class HelloLWJGL {
 
 
   private void drawScene() {
-    drawTextMessage("(1,100)", winWidth, winHeight);
+    GL11.glClearColor(1, 1, 1, 1);
+    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+    // GL11.glDisable(GL11.GL_CULL_FACE);
+    // GL11.glFrontFace(GL11.GL_CCW);
+
+    double dt = deltaTime();
+    // System.out.printf("dt=%5.3f \n", dt);
+    input.update(dt, gameState::onAction);
+
+    // drawScene();
+    // each frame:
+    Matrix4f viewProjMatrix = gameState.camera.getViewProj(gameState.winWidth, gameState.winHeight);
+
+    shaderMesh.bind();
+    shaderMesh.set("uViewProj", viewProjMatrix);
+    shaderMesh.set("uModel", modelMatrix(2,0,2));
+    float timeSeconds = (float) ((System.nanoTime() - startTime) / 1_000_000_000.0f);
+    // shaderMesh.set("uTime", timeSeconds);
+    mesh.draw();
+    shaderMesh.unbind();
+
+    if (gameState.showAxis) {
+      shaderAxes.bind();
+      shaderAxes.set("uLen", 3.0f); // scale the axis
+      Matrix4f mvp = new Matrix4f(viewProjMatrix).mul(new Matrix4f().identity());
+      shaderAxes.set("uMVP", mvp);
+      axes.draw();
+      shaderAxes.unbind();
+    }
+
+    // drawTextMessage("(1,100)", winWidth, winHeight);
+    GLFW.glfwSwapBuffers(glfwWindow);
   }
 
   void drawTextMessage(String text, int winW, int winH) {
@@ -343,8 +349,8 @@ public class HelloLWJGL {
   }
 
   private void cleanup() {
-    Callbacks.glfwFreeCallbacks(window);
-    GLFW.glfwDestroyWindow(window);
+    Callbacks.glfwFreeCallbacks(glfwWindow);
+    GLFW.glfwDestroyWindow(glfwWindow);
     GLFW.glfwTerminate();
     GLFW.glfwSetErrorCallback(null).free();
     mesh.dispose();

@@ -19,7 +19,10 @@ public class GameState {
   private boolean orbiting;
   private boolean shutdown = false;
 
-  public int winXPos, winYPos, winHeight, winWidth;
+  public int winXPos;
+  public int winYPos;
+  public int winHeight;
+  public int winWidth;
   public boolean showAxis;
   public boolean showStatusText;
   public String title = TITLE_DEFAULT;
@@ -28,11 +31,11 @@ public class GameState {
   private final float DEFAULT_CAMERA_YROT = -20;
   private final float[] DEFAULT_CAMERA_POS = {1.8f, 1f, 4f};
 
-  private long window;
+  private long glfwWindow;
   GlfwPopupBridge glfwBridge = new GlfwPopupBridge(getMiniPopup());
 
-  public GameState(long window) {
-    this.window = window;
+  public GameState(long glfwWindow) {
+    this.glfwWindow = glfwWindow;
     // glfwBridge.attachTo(window);
     // this.camera = camera;
     // this.scene = scene;
@@ -89,9 +92,9 @@ public class GameState {
       case KEY -> {
         showCursor = !showCursor;
         if (showCursor) {
-          GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+          GLFW.glfwSetInputMode(glfwWindow, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
         } else {
-          GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+          GLFW.glfwSetInputMode(glfwWindow, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
         }
       }
       case RIGHTCLICK -> {
@@ -178,6 +181,13 @@ public class GameState {
     return menu;
   }
 
+  public void showWinDimensions() {
+    System.out.printf("%d %d %d %d \n", winXPos, winYPos, winWidth, winHeight);
+  }
+
+
 }
+
+
 
 
