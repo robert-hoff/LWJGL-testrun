@@ -1,18 +1,6 @@
 package state;
 
-import java.awt.Frame;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JWindow;
-import javax.swing.SwingUtilities;
-
 import org.lwjgl.glfw.GLFW;
-
-import graphics.Camera;
 import graphics.OrbitCamera;
 import input.Action;
 
@@ -161,7 +149,8 @@ public class GameState {
   MiniPopup getMiniPopup() {
     MiniPopup menu = new MiniPopup();
     menu.addItem("Toggle Axes",        e -> {
-      System.out.println("toggle");
+      // System.out.println("toggle");
+      GameState.this.showAxis = !GameState.this.showAxis;
     });
     //    menu.addItem("Toggle status text", e -> {
     //      System.out.println("status text");

@@ -4,13 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -25,9 +19,8 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBEasyFont;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import graphics.Camera;
+import graphics.Axes;
 import graphics.Mesh;
-import graphics.OrbitCamera;
 import graphics.Shader;
 import input.CursorEvent;
 import input.InputSystem;
@@ -38,7 +31,6 @@ import model_loader.BlueprintLoader;
 import model_loader.MyFile;
 import model_loader.SubBlueprint;
 import state.GameState;
-import state.Scene;
 
 
 public class HelloLWJGL {
@@ -56,7 +48,7 @@ public class HelloLWJGL {
   }
 
 
-  //  private double lastPressTime;
+  private double startTime;
   //  private double pressX, pressY;
 
   // private OrbitCamera camera = new OrbitCamera();
@@ -67,7 +59,9 @@ public class HelloLWJGL {
 
   // Mesh mesh = Mesh.create(modelFloatArray);
   Mesh mesh;
-  Shader shader;
+  Axes axes;
+  Shader shaderMesh;
+  Shader shaderAxes;
 
   private void init() throws Exception {
 
@@ -130,6 +124,7 @@ public class HelloLWJGL {
       }
     });
 
+    startTime = GLFW.glfwGetTime();
     lastTime = GLFW.glfwGetTime();
 
 
@@ -145,12 +140,19 @@ public class HelloLWJGL {
     List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\43_BananaTree.txt"));
 
     mesh = Mesh.create(bps.get(1).getFullModelData());
+    axes = Axes.create();
 
-    String vertexSource = Files.readString(Paths.get(
+    String vShaderMesh = Files.readString(Paths.get(
         Shader.class.getResource("/glsl/mesh.vert").toURI()));
-    String fragmentSource = Files.readString(Paths.get(
+    String fShaderMesh = Files.readString(Paths.get(
         Shader.class.getResource("/glsl/mesh.frag").toURI()));
-    shader = new Shader(vertexSource, fragmentSource);
+    String vShaderAxes = Files.readString(Paths.get(
+        Shader.class.getResource("/glsl/axes.vert").toURI()));
+    String fShaderAxes = Files.readString(Paths.get(
+        Shader.class.getResource("/glsl/axes.frag").toURI()));
+
+    shaderMesh = new Shader(vShaderMesh, fShaderMesh);
+    shaderAxes = new Shader(vShaderAxes, fShaderAxes);
 
 
     // Enable multisampling (must be after context creation)
@@ -186,8 +188,6 @@ public class HelloLWJGL {
     //    });
   }
 
-
-  private static final boolean SHOW_TIMESTAMP_EACH_DRAW = false;
   final int TARGET_FPS = 10;
   final double FRAME_TIME = 1.0 / TARGET_FPS;
 
@@ -219,18 +219,26 @@ public class HelloLWJGL {
 
       // drawScene();
       // each frame:
-      shader.bind();
       Matrix4f viewProjMatrix = gameState.camera.getViewProj(gameState.winWidth, gameState.winHeight);
-      // Matrix4f modelMatrix = new Matrix4f();
 
-      shader.set("uViewProj", viewProjMatrix);
-      shader.set("uModel", modelMatrix());
-      // float timeSeconds = (System.nanoTime() - startTime) / 1_000_000_000.0f;
-      shader.set("uTime", 0.0f);
+      shaderMesh.bind();
+      shaderMesh.set("uViewProj", viewProjMatrix);
+      shaderMesh.set("uModel", modelMatrix(2,0,2));
+      float timeSeconds = (float) ((System.nanoTime() - startTime) / 1_000_000_000.0f);
+      // shaderMesh.set("uTime", timeSeconds);
       mesh.draw();
-      shader.unbind();
-      GLFW.glfwSwapBuffers(window);
+      shaderMesh.unbind();
 
+      if (gameState.showAxis) {
+        shaderAxes.bind();
+        shaderAxes.set("uLen", 3.0f); // scale the axis
+        Matrix4f mvp = new Matrix4f(viewProjMatrix).mul(new Matrix4f().identity());
+        shaderAxes.set("uMVP", mvp);
+        axes.draw();
+        shaderAxes.unbind();
+      }
+
+      GLFW.glfwSwapBuffers(window);
       // limit the frame rate
       double elapsed = GLFW.glfwGetTime() - lastTime;
       double sleepTime = FRAME_TIME - elapsed;
@@ -243,7 +251,6 @@ public class HelloLWJGL {
       }
     }
   }
-
 
   Matrix4f viewProjMatrix() {
     Vector3f cameraPos = new Vector3f(0, 2, 5);
@@ -259,8 +266,8 @@ public class HelloLWJGL {
     return viewProjMatrix;
   }
 
-  Matrix4f modelMatrix() {
-    Vector3f position = new Vector3f(0, 0, 0);
+  Matrix4f modelMatrix(float x, float y, float z) {
+    Vector3f position = new Vector3f(x, y, z);
     Vector3f rotation = new Vector3f(0, 0, 0); // radians
     float scale = 1.0f;
     Matrix4f modelMatrix = new Matrix4f()
@@ -283,22 +290,6 @@ public class HelloLWJGL {
 
 
   private void drawScene() {
-    if (SHOW_TIMESTAMP_EACH_DRAW) {
-      String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS"));
-      System.out.println(ts);
-    }
-    // clear framebuffer
-    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-    // Draw a simple triangle
-    GL11.glBegin(GL11.GL_TRIANGLES);
-    GL11.glColor3f(1.0f, 0.0f, 0.0f); // Red
-    GL11.glVertex2f(-0.5f, -0.5f);
-    GL11.glColor3f(0.0f, 1.0f, 0.0f); // Green
-    GL11.glVertex2f(0.5f, -0.5f);
-    GL11.glColor3f(0.0f, 0.0f, 1.0f); // Blue
-    GL11.glVertex2f(0.0f, 0.5f);
-    GL11.glEnd();
-
     drawTextMessage("(1,100)", winWidth, winHeight);
   }
 
@@ -352,26 +343,12 @@ public class HelloLWJGL {
   }
 
   private void cleanup() {
-    int[] dim = getWindowDimensions();
     Callbacks.glfwFreeCallbacks(window);
     GLFW.glfwDestroyWindow(window);
     GLFW.glfwTerminate();
     GLFW.glfwSetErrorCallback(null).free();
-
     mesh.dispose();
   }
-
-  private int[] getWindowDimensions() {
-    // this is a 'try-with-resources' block
-    // requires the resource to implement AutoCloseble
-    try (MemoryStack stack = MemoryStack.stackPush()) {
-      IntBuffer pWidth = stack.mallocInt(1);
-      IntBuffer pHeight = stack.mallocInt(1);
-      GLFW.glfwGetWindowSize(window, pWidth, pHeight);
-      return new int[] {pWidth.get(0), pHeight.get(0)};
-    }
-  }
-
 
   public static void main(String[] args) throws Exception {
     // creates a Swing panel that exists alongside the GLWF window

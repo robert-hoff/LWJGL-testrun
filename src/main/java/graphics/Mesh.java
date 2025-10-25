@@ -1,6 +1,5 @@
 package graphics;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.system.MemoryUtil.*;
 
 public final class Mesh {
   public final int vao;

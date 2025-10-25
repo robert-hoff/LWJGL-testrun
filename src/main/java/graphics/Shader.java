@@ -1,6 +1,5 @@
 package graphics;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
