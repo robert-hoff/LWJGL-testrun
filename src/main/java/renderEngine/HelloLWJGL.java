@@ -18,6 +18,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWWindowPosCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -120,8 +121,16 @@ public class HelloLWJGL {
     GLFW.glfwSetKeyCallback(window, (w, key, sc, action, mods) ->
     input.enqueue(new KeyEvent(w, GLFW.glfwGetTime(), key, sc, action, mods)));
 
-    lastTime = GLFW.glfwGetTime();
+    // Set callback to detect movement
+    GLFW.glfwSetWindowPosCallback(window, new GLFWWindowPosCallback() {
+      @Override
+      public void invoke(long window, int xpos, int ypos) {
+        gameState.winXPos = xpos;
+        gameState.winYPos = ypos;
+      }
+    });
 
+    lastTime = GLFW.glfwGetTime();
 
 
     // ** GL CONTEXT **
