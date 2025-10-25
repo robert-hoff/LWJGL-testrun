@@ -26,6 +26,8 @@ public class EventHandler {
 
 
   List<Action> process(InputEvent e) {
+    // System.out.println(e);
+
     List<Action> out = new ArrayList<Action>();
 
     // Track cursor + accumulate deltas
@@ -60,14 +62,14 @@ public class EventHandler {
 
         if (smallMove && dt < CLICK_TIME) {
           if (mb.timeSeconds() - lastClickTime < DOUBLE_CLICK_TIME) {
-            out.add(new Action(ActionType.DOUBLE_CLICK, cx, cy, mb.button(), mb.mods(), 0, 0));
+            out.add(new Action(ActionType.DOUBLE_CLICK, cx, cy, mb.button(), mb.mods(), 0, 0, ""));
             lastClickTime = -10;
           } else {
-            out.add(new Action(ActionType.CLICK, cx, cy, mb.button(), mb.mods(), 0, 0));
+            out.add(new Action(ActionType.CLICK, cx, cy, mb.button(), mb.mods(), 0, 0, ""));
             lastClickTime = mb.timeSeconds();
           }
         } else {
-          out.add(new Action(ActionType.DRAG_END, cx, cy, mb.button(), mb.mods(), 0, 0));
+          out.add(new Action(ActionType.DRAG_END, cx, cy, mb.button(), mb.mods(), 0, 0, ""));
         }
         lDown = false;
         dxAccum = 0;
@@ -76,16 +78,29 @@ public class EventHandler {
     }
 
 
+    if (e instanceof MouseButtonEvent mb && mb.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+      if (mb.action() == GLFW.GLFW_PRESS) {
+        mouseRightTime = mb.timeSeconds();
+      }
+      if (mb.action() == GLFW.GLFW_RELEASE) {
+        // System.out.printf("cx=%5.3f, cy=%5.3f \n", cx, cy);
+        if (mb.timeSeconds() - mouseRightTime < 0.4) {
+          out.add(new Action(ActionType.RIGHTCLICK, cx, cy, 0, 0, 0, 0, ""));
+        }
+      }
+    }
+
+
     // Mouse drag updates
     if (lDown && Math.hypot(cx - px, cy - py) >= CLICK_DIST) {
-      out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, GLFW.GLFW_MOUSE_BUTTON_LEFT, 0, dxAccum, dyAccum));
+      out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, GLFW.GLFW_MOUSE_BUTTON_LEFT, 0, dxAccum, dyAccum, ""));
       dxAccum = 0;
       dyAccum = 0;
     }
 
     // Mouse wheel => zoom
     if (e instanceof ScrollEvent s) {
-      out.add(new Action(ActionType.ZOOM, cx, cy, -1, 0, 0, s.dy()));
+      out.add(new Action(ActionType.ZOOM, cx, cy, -1, 0, 0, s.dy(), ""));
     }
 
     // --- Keyboard handling ---
@@ -99,12 +114,12 @@ public class EventHandler {
         if (key_action == GLFW.GLFW_PRESS) {
           if (!orbitHeldByKeyboard) {
             orbitHeldByKeyboard = true;
-            out.add(new Action(ActionType.ORBIT_START, cx, cy, -1, mods, 0, 0));
+            out.add(new Action(ActionType.ORBIT_START, cx, cy, -1, mods, 0, 0, ""));
           }
         } else if (key_action == GLFW.GLFW_RELEASE) {
           if (orbitHeldByKeyboard) {
             orbitHeldByKeyboard = false;
-            out.add(new Action(ActionType.ORBIT_END, cx, cy, -1, mods, 0, 0));
+            out.add(new Action(ActionType.ORBIT_END, cx, cy, -1, mods, 0, 0, ""));
           }
         }
       }
@@ -127,14 +142,14 @@ public class EventHandler {
           kdy =  KEY_PAN_STEP;
         }
         if (kdx != 0 || kdy != 0) {
-          out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, -1, mods, kdx, kdy));
+          out.add(new Action(ActionType.DRAG_UPDATE, cx, cy, -1, mods, kdx, kdy, ""));
         }
         // Keyboard zoom: PageUp/PageDown and +/- keys
         if (key == GLFW.GLFW_KEY_PAGE_UP || key == GLFW.GLFW_KEY_EQUAL || key == GLFW.GLFW_KEY_KP_ADD) {
-          out.add(new Action(ActionType.ZOOM, cx, cy, -1, mods, 0, -KEY_ZOOM_STEP));
+          out.add(new Action(ActionType.ZOOM, cx, cy, -1, mods, 0, -KEY_ZOOM_STEP, ""));
         }
         if (key == GLFW.GLFW_KEY_PAGE_DOWN || key == GLFW.GLFW_KEY_MINUS || key == GLFW.GLFW_KEY_KP_SUBTRACT) {
-          out.add(new Action(ActionType.ZOOM, cx, cy, -1, mods, 0,  KEY_ZOOM_STEP));
+          out.add(new Action(ActionType.ZOOM, cx, cy, -1, mods, 0,  KEY_ZOOM_STEP, ""));
         }
         // ESC => cancel drag if in progress
         //        if (key == GLFW.GLFW_KEY_ESCAPE && lDown) {
@@ -143,7 +158,10 @@ public class EventHandler {
         //        }
 
         if (key == GLFW.GLFW_KEY_ESCAPE) {
-          out.add(new Action(ActionType.SHUTDOWN, 0, 0, 0, 0, 0, 0));
+          out.add(new Action(ActionType.SHUTDOWN, 0, 0, 0, 0, 0, 0, ""));
+        }
+        if (key == GLFW.GLFW_KEY_1) {
+          out.add(new Action(ActionType.KEY, 0, 0, 0, 0, 0, 0, "1"));
         }
       }
     }
@@ -152,6 +170,8 @@ public class EventHandler {
   }
 
 
+
+  double mouseRightTime = 0;
 
   //hook for time-based gestures if needed
   List<Action> updateTime(double dt) {

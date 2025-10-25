@@ -1,5 +1,15 @@
 package state;
 
+import java.awt.Frame;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JWindow;
+import javax.swing.SwingUtilities;
+
 import org.lwjgl.glfw.GLFW;
 
 import graphics.Camera;
@@ -30,7 +40,12 @@ public class GameState {
   private final float DEFAULT_CAMERA_YROT = -20;
   private final float[] DEFAULT_CAMERA_POS = {1.8f, 1f, 4f};
 
-  public GameState() {
+  private long window;
+  GlfwPopupBridge glfwBridge = new GlfwPopupBridge(getMiniPopup());
+
+  public GameState(long window) {
+    this.window = window;
+    // glfwBridge.attachTo(window);
     // this.camera = camera;
     // this.scene = scene;
 
@@ -52,16 +67,30 @@ public class GameState {
   }
 
 
+  boolean showCursor = false;
+
   public void onAction(Action a) {
 
     // System.out.println(a);
 
     switch (a.type()) {
-      case CLICK -> selectAt(a.x(), a.y());
-      case DOUBLE_CLICK -> focusAt(a.x(), a.y());
-      case ORBIT_START -> orbiting = true;
+      case CLICK -> {
+        if (glfwBridge.popup.isVisible()) {
+          glfwBridge.hidePopup();
+        }
+
+        selectAt(a.x(), a.y());
+      }
+      case DOUBLE_CLICK -> {
+        focusAt(a.x(), a.y());
+      }
+      case ORBIT_START -> {
+        orbiting = true;
+      }
       // case ORBIT_UPDATE -> { if (orbiting) { camera.orbit(a.dx(), a.dy()); } }
-      case ORBIT_END -> orbiting = false;
+      case ORBIT_END -> {
+        orbiting = false;
+      }
       case DRAG_UPDATE -> {
         camera.rotate((float) -a.dx() * 0.005f, (float) a.dy() * 0.005f);
       }
@@ -69,8 +98,25 @@ public class GameState {
         // camera.dolly(a.dy());
         camera.zoom((float) a.dy());
       }
-
-      case SHUTDOWN -> this.shutdown = true;
+      case KEY -> {
+        showCursor = !showCursor;
+        if (showCursor) {
+          GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+        } else {
+          GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+        }
+      }
+      case RIGHTCLICK -> {
+        if (glfwBridge.popup.isVisible()) {
+          glfwBridge.hidePopup();
+        } else {
+          glfwBridge.showAtScreen((int) a.x()+winXPos, (int) a.y()+winYPos);
+        }
+      }
+      case SHUTDOWN -> {
+        glfwBridge.dispose();
+        this.shutdown = true;
+      }
       default -> {}
     }
   }
@@ -80,7 +126,6 @@ public class GameState {
   private void maybeDragSelection(double dx, double dy) { /* translate gizmo */ }
 
 
-  //
   public void saveState(int winXPos, int winYPos, int winWidth, int winHeight) {
     this.winXPos = winXPos;
     this.winYPos = winYPos;
@@ -112,6 +157,38 @@ public class GameState {
   public boolean shutDown() {
     return shutdown;
   }
+
+  MiniPopup getMiniPopup() {
+    MiniPopup menu = new MiniPopup();
+    menu.addItem("Toggle Axes",        e -> {
+      System.out.println("toggle");
+    });
+    //    menu.addItem("Toggle status text", e -> {
+    //      System.out.println("status text");
+    //    });
+    //    menu.addSeparator();
+    //    menu.addItem("Set Scale",          e -> {
+    //      System.out.println("set scale");
+    //    });
+    //    menu.addItem("Clear status info",  e -> {
+    //      System.out.println("clear info");
+    //    });
+    menu.addItem("Show matrices", e -> {
+      System.out.println("show camera and view matrices");
+    });
+    //    menu.addSeparator();
+    //    menu.addItem("Start",              e -> {
+    //      System.out.println("start animation");
+    //    });
+    //    menu.addItem("Stop",               e -> {
+    //      System.out.println("stop animation");
+    //    });
+    //    menu.addItem("Reset",              e -> {
+    //      System.out.println("restart animation");
+    //    });
+    return menu;
+  }
+
 }
 
 

@@ -61,7 +61,7 @@ public class HelloLWJGL {
   // private OrbitCamera camera = new OrbitCamera();
   // private Scene scene = new Scene();
   private InputSystem input = new InputSystem();
-  private GameState gameState = new GameState();
+  private GameState gameState;
 
 
   // Mesh mesh = Mesh.create(modelFloatArray);
@@ -92,6 +92,7 @@ public class HelloLWJGL {
       throw new RuntimeException("Failed to create the GLFW window");
     }
 
+    gameState = new GameState(window);
     int[] winD = gameState.getWin();
     GLFW.glfwSetWindowPos(window, winD[0], winD[1]);
     GLFW.glfwSetWindowSize(window, winD[2], winD[3]);
@@ -132,7 +133,7 @@ public class HelloLWJGL {
     // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\89_Beaver.txt"));
     // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\64_Sparrow.txt"));
     // List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\55_Butterfly.txt"));
-    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\30_CherryTree.txt"));
+    List<SubBlueprint> bps = BlueprintLoader.loadBlueprint(new MyFile("\\blueprints\\43_BananaTree.txt"));
 
     mesh = Mesh.create(bps.get(1).getFullModelData());
 
@@ -362,15 +363,6 @@ public class HelloLWJGL {
     }
   }
 
-  @SuppressWarnings("unused")
-  private static void showSwingPanel() {
-    SwingUtilities.invokeLater(() -> {
-      JFrame frame = new JFrame("Swing Control Panel");
-      frame.setSize(300, 200);
-      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      frame.setVisible(true);
-    });
-  }
 
   public static void main(String[] args) throws Exception {
     // creates a Swing panel that exists alongside the GLWF window

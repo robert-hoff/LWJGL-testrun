@@ -20,5 +20,7 @@ public enum ActionType {
   CONFIRM,
   CANCEL,
   SHUTDOWN,
+  KEY,
+  RIGHTCLICK,
 }
 
